@@ -1,0 +1,20 @@
+[package]
+name = "capture-card-screenshot"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+nokhwa = { version = "0.10.7", features = ["input-msmf", "input-avfoundation", "input-v4l"] }
+msgbox = "0.7.0"
+regex = "1.11.1"
+thiserror = "2.0.12"
+arboard = "3.6.0"
+
+[build-dependencies]
+patch-crate = "0.1.13"
+
+[package.metadata.patch]
+crates = ["nokhwa-bindings-windows"]
+
+[patch.crates-io]
+nokhwa-bindings-windows = { path = "./target/patch/nokhwa-bindings-windows-0.4.2" }
