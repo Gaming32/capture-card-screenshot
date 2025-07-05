@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::process;
 use clipboard_rs::common::RustImage;
 use clipboard_rs::{Clipboard, ClipboardContext, RustImageData};
 use nokhwa::NokhwaError;
@@ -45,6 +46,7 @@ fn main() {
             }
         }
         msgbox::create(DIALOG_TITLE, &message, msgbox::IconType::Error).unwrap();
+        process::exit(1);
     }
 }
 
