@@ -1,3 +1,5 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use clipboard_rs::common::RustImage;
 use clipboard_rs::{Clipboard, ClipboardContext, RustImageData};
 use nokhwa::NokhwaError;
@@ -80,12 +82,7 @@ fn perform_screenshot() -> Result<(), ScreenshotError> {
     println!("Closed camera");
 
     let clipboard = ClipboardContext::new()?;
-    println!("Opened clipboard");
-
-    let image = RustImageData::from_dynamic_image(frame.into());
-    println!("Converted image");
-
-    clipboard.set_image(image)?;
+    clipboard.set_image(RustImageData::from_dynamic_image(frame.into()))?;
     println!("Copied to clipboard");
 
     Ok(())
