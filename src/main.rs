@@ -34,7 +34,15 @@ fn main() {
         }
     });
     if let Err(e) = perform_screenshot() {
-        msgbox::create(DIALOG_TITLE, &e.to_string(), msgbox::IconType::Error).unwrap();
+        let mut message = e.to_string();
+        if matches!(e, ScreenshotError::NoCamerasFound) {
+            message.push_str("\nAvailable cameras:");
+            for camera in nokhwa::query(ApiBackend::Auto).into_iter().flatten() {
+                message.push_str("\n  -");
+                message.push_str(&camera.human_name());
+            }
+        }
+        msgbox::create(DIALOG_TITLE, &message, msgbox::IconType::Error).unwrap();
     }
 }
 
