@@ -1,10 +1,10 @@
-use std::borrow::Cow;
 use nokhwa::utils::{ApiBackend, RequestedFormat, RequestedFormatType};
 use regex::RegexSet;
 use std::sync::LazyLock;
-use arboard::{Clipboard, ImageData};
+use clipboard_rs::{Clipboard, ClipboardContext, RustImageData};
+use clipboard_rs::common::RustImage;
 use nokhwa::NokhwaError;
-use nokhwa::pixel_format::{RgbAFormat, RgbFormat};
+use nokhwa::pixel_format::RgbFormat;
 use thiserror::Error;
 
 const DIALOG_TITLE: &str = "Capture Card Screenshot";
@@ -21,7 +21,7 @@ enum ScreenshotError {
     #[error("Failed to take screenshot: {0}")]
     ScreenshotError(#[from] NokhwaError),
     #[error("Failed to copy to clipboard: {0}")]
-    ClipboardError(#[from] arboard::Error),
+    ClipboardError(#[from] Box<dyn std::error::Error + Send + Sync>)
 }
 
 fn main() {
@@ -59,19 +59,27 @@ fn perform_screenshot() -> Result<(), ScreenshotError> {
     camera.open_stream()?;
     println!("Opened camera with format {}", camera.camera_format());
 
-    let frame = camera.frame()?.decode_image::<RgbAFormat>()?;
-    println!("Captured image {}x{}", frame.width(), frame.height());
+    // Use a loop, as some capture cards can take a moment to start up
+    let frame = loop {
+        let frame = camera.frame()?.decode_image::<RgbFormat>()?;
+        println!("Captured image {}x{}", frame.width(), frame.height());
+        if frame.iter().enumerate().any(|(i, p)| i & 3 != 3 && *p > 0) {
+            break frame;
+        }
+    };
 
     camera.stop_stream()?;
     drop(camera);
     println!("Closed camera");
 
-    let mut clipboard = Clipboard::new()?;
-    clipboard.set_image(ImageData {
-        width: frame.width() as usize,
-        height: frame.height() as usize,
-        bytes: Cow::from(frame.as_raw())
-    })?;
+    let clipboard = ClipboardContext::new()?;
+    println!("Opened clipboard");
+
+    let image = RustImageData::from_dynamic_image(frame.into());
+    println!("Converted image");
+
+    clipboard.set_image(image)?;
+    println!("Copied to clipboard");
 
     Ok(())
 }
