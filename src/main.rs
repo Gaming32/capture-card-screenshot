@@ -45,7 +45,7 @@ fn main() {
         }
         msgbox::create(
             DIALOG_TITLE,
-            &message,
+            &e.to_string(),
             msgbox::IconType::Error,
         ).unwrap();
     }
