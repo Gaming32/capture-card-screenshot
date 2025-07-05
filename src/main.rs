@@ -1,12 +1,12 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::process;
 use clipboard_rs::common::RustImage;
 use clipboard_rs::{Clipboard, ClipboardContext, RustImageData};
 use nokhwa::NokhwaError;
 use nokhwa::pixel_format::RgbFormat;
 use nokhwa::utils::{ApiBackend, RequestedFormat, RequestedFormatType};
 use regex::RegexSet;
+use std::process;
 use std::sync::LazyLock;
 use thiserror::Error;
 
