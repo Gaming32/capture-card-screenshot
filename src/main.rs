@@ -1,27 +1,25 @@
+use clipboard_rs::common::RustImage;
+use clipboard_rs::{Clipboard, ClipboardContext, RustImageData};
+use nokhwa::NokhwaError;
+use nokhwa::pixel_format::RgbFormat;
 use nokhwa::utils::{ApiBackend, RequestedFormat, RequestedFormatType};
 use regex::RegexSet;
 use std::sync::LazyLock;
-use clipboard_rs::{Clipboard, ClipboardContext, RustImageData};
-use clipboard_rs::common::RustImage;
-use nokhwa::NokhwaError;
-use nokhwa::pixel_format::RgbFormat;
 use thiserror::Error;
 
 const DIALOG_TITLE: &str = "Capture Card Screenshot";
 
-static CAPTURE_CARD_REGEX: LazyLock<RegexSet> = LazyLock::new(|| RegexSet::new([
-    "^UGREEN HDMI Capture$",
-    "^Live Gamer .*-Video$",
-]).unwrap());
+static CAPTURE_CARD_REGEX: LazyLock<RegexSet> =
+    LazyLock::new(|| RegexSet::new(["^UGREEN HDMI Capture$", "^Live Gamer .*-Video$"]).unwrap());
 
 #[derive(Debug, Error)]
 enum ScreenshotError {
     #[error("No supported cameras found")]
     NoCamerasFound,
     #[error("Failed to take screenshot: {0}")]
-    ScreenshotError(#[from] NokhwaError),
+    Screenshot(#[from] NokhwaError),
     #[error("Failed to copy to clipboard: {0}")]
-    ClipboardError(#[from] Box<dyn std::error::Error + Send + Sync>)
+    Clipboard(#[from] Box<dyn std::error::Error + Send + Sync>),
 }
 
 fn main() {
@@ -31,15 +29,12 @@ fn main() {
                 DIALOG_TITLE,
                 "Camera permission is required to take a screenshot.",
                 msgbox::IconType::Error,
-            ).unwrap();
+            )
+            .unwrap();
         }
     });
     if let Err(e) = perform_screenshot() {
-        msgbox::create(
-            DIALOG_TITLE,
-            &e.to_string(),
-            msgbox::IconType::Error,
-        ).unwrap();
+        msgbox::create(DIALOG_TITLE, &e.to_string(), msgbox::IconType::Error).unwrap();
     }
 }
 
@@ -52,9 +47,13 @@ fn perform_screenshot() -> Result<(), ScreenshotError> {
 
     let mut camera = nokhwa::Camera::new(
         camera.index().clone(),
-        RequestedFormat::new::<RgbFormat>(RequestedFormatType::AbsoluteHighestResolution)
+        RequestedFormat::new::<RgbFormat>(RequestedFormatType::AbsoluteHighestResolution),
     )?;
-    println!("Created camera {} with backend {}", camera.index(), camera.backend());
+    println!(
+        "Created camera {} with backend {}",
+        camera.index(),
+        camera.backend()
+    );
 
     camera.open_stream()?;
     println!("Opened camera with format {}", camera.camera_format());
